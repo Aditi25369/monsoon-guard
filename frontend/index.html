@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monsoon Guard — GenAI Preparedness Assistant</title>
+  <meta name="description"
+    content="Personalized, multilingual monsoon preparedness plans, checklists, travel advisories and alerts." />
+  <style>
+    :root {
+      --brand: #0b5ed7;
+      --brand-dark: #063d8e;
+      --bg: #f5f8fc;
+      --card: #ffffff;
+      --text: #14213d;
+      --muted: #4b5563;
+      --danger: #b3261e;
+      --focus: #ff7a00;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      padding: 1.5rem 1rem;
+    }
+
+    header h1 {
+      margin: 0 0 .25rem;
+      font-size: 1.6rem;
+    }
+
+    header p {
+      margin: 0;
+      opacity: .9;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 1.5rem auto;
+      padding: 0 1rem 3rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin: .75rem 0 .25rem;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: .55rem .6rem;
+      border: 1px solid #c6ccd6;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus,
+    button:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 1px;
+    }
+
+    fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .row {
+      display: grid;
+      gap: .75rem;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 560px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    button {
+      margin-top: 1rem;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      padding: .65rem 1.1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: var(--brand-dark);
+    }
+
+    button[disabled] {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 1rem;
+      border-top: 1px solid #e5e9f0;
+      padding-top: 1rem;
+    }
+
+    .result ul {
+      padding-left: 1.2rem;
+    }
+
+    .status {
+      font-size: .95rem;
+      margin-top: .5rem;
+    }
+
+    .status[data-state="error"] {
+      color: var(--danger);
+    }
+
+    .status[data-state="loading"] {
+      color: var(--muted);
+    }
+
+    .alert-badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #fff;
+      text-transform: capitalize;
+    }
+
+    .sev-low {
+      background: #2f9e44;
+    }
+
+    .sev-moderate {
+      background: #e8a400;
+    }
+
+    .sev-high {
+      background: #e8590c;
+    }
+
+    .sev-severe {
+      background: #c92a2a;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+      padding: 1rem;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 0;
+      background: #fff;
+      color: var(--text);
+      padding: .6rem 1rem;
+      z-index: 10;
+      border-radius: 0 0 6px 0;
+    }
+
+    .skip-link:focus {
+      left: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header>
+    <h1>🌧️ Monsoon Guard</h1>
+    <p>GenAI-powered monsoon preparedness for individuals, families &amp; communities.</p>
+  </header>
+
+  <main id="main-content">
+    <!-- Live alerts: aria-live so screen readers announce updates -->
+    <section class="card" aria-labelledby="alerts-heading">
+      <h2 id="alerts-heading">Real-time Alerts</h2>
+      <label for="alert-location">Location</label>
+      <input id="alert-location" type="text" value="Belagavi" autocomplete="address-level2" />
+      <button type="button" id="alert-btn">Check alerts</button>
+      <div id="alert-status" class="status" role="status" aria-live="polite"></div>
+      <div id="alert-result" class="result" aria-live="polite"></div>
+    </section>
+
+    <!-- Preparedness plan -->
+    <section class="card" aria-labelledby="plan-heading">
+      <h2 id="plan-heading">Personalized Preparedness Plan</h2>
+      <form id="plan-form" novalidate>
+        <div class="row">
+          <div>
+            <label for="plan-location">Location *</label>
+            <input id="plan-location" name="location" required maxlength="100" value="Belagavi" />
+          </div>
+          <div>
+            <label for="plan-household-size">Household size *</label>
+            <input id="plan-household-size" name="household_size" type="number" min="1" max="20" required value="4" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="plan-household-type">Household type *</label>
+            <select id="plan-household-type" name="household_type" required>
+              <option value="family">Family</option>
+              <option value="single">Single</option>
+              <option value="family_with_elderly">Family with elderly</option>
+              <option value="family_with_infants">Family with infants</option>
+              <option value="family_with_disability">Family with a person with disability</option>
+            </select>
+          </div>
+          <div>
+            <label for="plan-dwelling-type">Dwelling type *</label>
+            <select id="plan-dwelling-type" name="dwelling_type" required>
+              <option value="apartment">Apartment</option>
+              <option value="independent_house">Independent house</option>
+              <option value="low_lying_area">Low-lying area</option>
+              <option value="coastal">Coastal</option>
+              <option value="hillside">Hillside</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="plan-language">Language *</label>
+            <select id="plan-language" name="language" required>
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="kn">Kannada</option>
+              <option value="mr">Marathi</option>
+            </select>
+          </div>
+          <div>
+            <label for="plan-vehicle">Has a vehicle?</label>
+            <select id="plan-vehicle" name="has_vehicle">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+        <label for="plan-special-needs">Special needs (optional)</label>
+        <textarea id="plan-special-needs" name="special_needs" rows="2" maxlength="300"
+          placeholder="e.g. wheelchair access needed, infant in household"></textarea>
+        <button type="submit">Generate my plan</button>
+      </form>
+      <div id="plan-status" class="status" role="status" aria-live="polite"></div>
+      <div id="plan-result" class="result" aria-live="polite"></div>
+    </section>
+
+    <!-- Travel advisory -->
+    <section class="card" aria-labelledby="travel-heading">
+      <h2 id="travel-heading">Travel Advisory</h2>
+      <form id="travel-form" novalidate>
+        <div class="row">
+          <div>
+            <label for="travel-origin">From *</label>
+            <input id="travel-origin" name="origin" required maxlength="100" value="Belagavi" />
+          </div>
+          <div>
+            <label for="travel-destination">To *</label>
+            <input id="travel-destination" name="destination" required maxlength="100" value="Bengaluru" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="travel-date">Date *</label>
+            <input id="travel-date" name="travel_date" type="date" required />
+          </div>
+          <div>
+            <label for="travel-mode">Mode *</label>
+            <select id="travel-mode" name="mode" required>
+              <option value="car">Car</option>
+              <option value="bus">Bus</option>
+              <option value="train">Train</option>
+              <option value="flight">Flight</option>
+              <option value="two-wheeler">Two-wheeler</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit">Get advisory</button>
+      </form>
+      <div id="travel-status" class="status" role="status" aria-live="polite"></div>
+      <div id="travel-result" class="result" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer>Built for PromptWars · Monsoon Preparedness Challenge</footer>
+
+  <script>
+    // Configure this to your deployed backend before/for demo.
+    const API_BASE = window.MONSOON_GUARD_API_BASE || "https://monsoon-guard.onrender.com";
+
+    function setStatus(el, state, message) {
+      el.dataset.state = state;
+      el.textContent = message;
+    }
+
+    // Mirrors native validity onto aria-invalid so assistive tech announces
+    // invalid fields, not just the sighted red-outline focus state.
+    document.querySelectorAll("form").forEach((form) => {
+      form.addEventListener("input", (e) => {
+        if (e.target.hasAttribute("required")) {
+          e.target.setAttribute("aria-invalid", e.target.checkValidity() ? "false" : "true");
+        }
+      });
+    });
+
+    function renderPlan(container, data) {
+      const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+      container.innerHTML = `
+      <p>${esc(data.summary || "")}</p>
+      ${data.action_items?.length ? `<h3>Action items</h3><ul>${data.action_items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+      ${data.checklist?.length ? `<h3>Checklist</h3><ul>${data.checklist.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+      ${data.emergency_contacts_hint?.length ? `<h3>Emergency contacts</h3><ul>${data.emergency_contacts_hint.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+    `;
+    }
+
+    async function postJSON(path, body) {
+      const resp = await fetch(`${API_BASE}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.detail || `Request failed (${resp.status})`);
+      }
+      return data;
+    }
+
+    // --- Alerts ---
+    document.getElementById("alert-btn").addEventListener("click", async () => {
+      const location = document.getElementById("alert-location").value.trim();
+      const status = document.getElementById("alert-status");
+      const result = document.getElementById("alert-result");
+      result.innerHTML = "";
+      if (!location) { setStatus(status, "error", "Please enter a location."); return; }
+      setStatus(status, "loading", "Checking alerts…");
+      try {
+        const resp = await fetch(`${API_BASE}/api/alerts?location=${encodeURIComponent(location)}`);
+        const alerts = await resp.json();
+        if (!resp.ok) throw new Error(alerts.detail || "Could not fetch alerts.");
+        setStatus(status, "done", "");
+        result.innerHTML = alerts.map(a => `
+        <p><span class="alert-badge sev-${a.severity}">${a.severity}</span>
+        <strong> ${a.headline}</strong><br/>${a.message}</p>
+      `).join("");
+      } catch (err) {
+        setStatus(status, "error", err.message);
+      }
+    });
+
+    // --- Preparedness plan ---
+    document.getElementById("plan-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const status = document.getElementById("plan-status");
+      const result = document.getElementById("plan-result");
+      result.innerHTML = "";
+      const payload = {
+        location: form.location.value.trim(),
+        household_type: form.household_type.value,
+        dwelling_type: form.dwelling_type.value,
+        household_size: Number(form.household_size.value),
+        has_vehicle: form.has_vehicle.value === "true",
+        language: form.language.value,
+        special_needs: form.special_needs.value.trim() || null,
+      };
+      setStatus(status, "loading", "Generating your plan…");
+      try {
+        const data = await postJSON("/api/preparedness-plan", payload);
+        setStatus(status, "done", "");
+        renderPlan(result, data);
+      } catch (err) {
+        setStatus(status, "error", err.message);
+      }
+    });
+
+    // --- Travel advisory ---
+    document.getElementById("travel-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const status = document.getElementById("travel-status");
+      const result = document.getElementById("travel-result");
+      result.innerHTML = "";
+      const payload = {
+        origin: form.origin.value.trim(),
+        destination: form.destination.value.trim(),
+        travel_date: form.travel_date.value,
+        mode: form.mode.value,
+        language: "en",
+      };
+      setStatus(status, "loading", "Fetching advisory…");
+      try {
+        const data = await postJSON("/api/travel-advisory", payload);
+        setStatus(status, "done", "");
+        renderPlan(result, data);
+      } catch (err) {
+        setStatus(status, "error", err.message);
+      }
+    });
+  </script>
+</body>
+
+</html>

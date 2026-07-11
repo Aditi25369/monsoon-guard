@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: monsoon-guard-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://monsoon-guard.vercel.app
+    healthCheckPath: /health
